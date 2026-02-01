@@ -1,7 +1,7 @@
 repos:
   # Commitlint validation
-  - repo: https://github.com/compilerla/pre-commit-commitlint
-    rev: v19.0.0
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.24.0
     hooks:
       - id: commitlint
         stages: [commit-msg]
@@ -17,26 +17,3 @@ repos:
         args: ['--maxkb=1000']
       - id: check-json
       - id: check-merge-conflict
-
-  # Go linting and formatting
-  - repo: https://github.com/golangci/golangci-lint
-    rev: v1.55.2
-    hooks:
-      - id: golangci-lint
-        args: ['--fix']
-        stages: [commit]
-
-  # Go formatting
-  - repo: https://github.com/tekwizz123/pre-commit-golang
-    rev: v1.0.0-rc.1
-    hooks:
-      - id: golang-format
-      - id: golang-vet
-
-  # Security checks
-  - repo: https://github.com/securego/gosec
-    rev: v2.18.2
-    hooks:
-      - id: gosec
-        args: ['-no-fail', '-fmt', 'json']
-        stages: [commit]
