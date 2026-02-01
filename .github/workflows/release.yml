@@ -27,7 +27,7 @@ jobs:
         id: octo-sts
         uses: octo-sts/action@main
         with:
-          scope: aaronsrivastava/substack-cli
+          scope: aaron-srivastava/substack-cli
           identity: release
 
       - name: Run GoReleaser
