@@ -1,0 +1,91 @@
+version: 2
+
+project_name: substack-cli
+
+builds:
+  - id: substack-cli
+    main: ./main.go
+    binary: substack
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+    env:
+      - CGO_ENABLED=0
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+
+brews:
+  - repository:
+      owner: aaronsrivastava
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    directory: Formula
+    caveats: |
+      After installation, you need to authenticate with your Substack account:
+        substack auth login
+      For help, run:
+        substack --help
+    homepage: https://github.com/aaronsrivastava/substack-cli
+    description: CLI tool for managing Substack publications
+    license: MIT
+    test: |
+      system "#{bin}/substack", "--version"
+    install: |
+      bin.install "substack"
+
+nfpms:
+  - package_name: substack-cli
+    file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    homepage: https://github.com/aaronsrivastava/substack-cli
+    description: CLI tool for managing Substack publications
+    maintainer: Aaron Srivastava <aaron@example.com>
+    license: MIT
+    formats:
+      - deb
+      - rpm
+    bindir: /usr/bin
+    contents:
+      - src: README.md
+        dst: /usr/share/doc/substack-cli/README.md
+    scripts:
+      postinstall: scripts/postinstall.sh
+      preremove: scripts/preremove.sh
+
+release:
+  github:
+    owner: aaronsrivastava
+    name: substack-cli
+  draft: false
+  prerelease: false
+  name_template: "v{{.Version}}"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - Merge pull request
+      - Merge branch

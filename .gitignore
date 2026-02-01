@@ -1,0 +1,29 @@
+# Binaries
+substack-cli
+substack
+dist/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+*.cover
+coverage.out
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
