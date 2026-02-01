@@ -4,18 +4,45 @@ This project enforces [Conventional Commits](https://www.conventionalcommits.org
 
 ## Setup
 
-### Install Dependencies
+### Install pre-commit
+
+Install the [pre-commit](https://pre-commit.com/) framework:
+
+**macOS (with Homebrew):**
+```bash
+brew install pre-commit
+```
+
+**Linux:**
+```bash
+pip install pre-commit
+```
+
+**Windows (with Chocolatey):**
+```bash
+choco install pre-commit
+```
+
+Or install from source:
+```bash
+pip install pre-commit
+```
+
+### Install Hooks
+
+After cloning the repository, install the git hooks:
 
 ```bash
-npm install
+cd substack-cli
+pre-commit install
+pre-commit install --hook-type commit-msg
 ```
 
 This installs:
-- **husky**: Git hooks manager
-- **commitlint**: Commit message linter
-- **@commitlint/config-conventional**: Standard config for conventional commits
-
-Husky will automatically install the pre-commit hook on npm install.
+- **commitlint**: Validates commit message format
+- **golangci-lint**: Lints Go code
+- **gosec**: Security scanner for Go
+- General checks (trailing whitespace, file endings, etc.)
 
 ## Commit Format
 
@@ -127,21 +154,23 @@ Changes:
 Fixes: #123, #456"
 ```
 
-## Pre-Commit Hook
+## Pre-Commit Hooks
 
-The pre-commit hook automatically validates your commit message **before** it's committed. If the message doesn't follow conventional commits, the commit is rejected:
+The pre-commit framework automatically validates your commits **before** they're created. If the message or code doesn't pass checks, the commit is rejected:
+
+### Commit Message Validation
 
 ```bash
 $ git commit -m "updated stuff"
 
+Commit message validation...
 ⧗   input: updated stuff
 ✖   subject case must not be start-case, pascal-case, upper-case
 ✖   type must be one of [feat, fix, ...] [type-empty]
 
 ✖   found 2 problems, 0 warnings
-ℹ   Get help: https://github.com/commitlint/commitlint/#what-is-commitlint
 
-husky - commit-hook failed (code 1)
+commit-msg hook failed
 ```
 
 **Valid commit:**
@@ -149,18 +178,38 @@ husky - commit-hook failed (code 1)
 ```bash
 $ git commit -m "fix: Update dependencies"
 
+Commit message validation...
 ✔   Commit message valid
 ```
 
-## Interactive Commit Helper
+### Code Quality Checks
 
-You can use the interactive commit prompt with:
+Pre-commit also runs on code files:
 
 ```bash
-npm run commit
+$ git add main.go && git commit -m "feat: Add new feature"
+
+Trim trailing whitespace.............................................. Passed
+Fix end of file fixer..................................................... Passed
+Check JSON........................................................Passed
+golangci-lint.............................................................Passed
+golang-format..............................................................Passed
+golang-vet................................................................Passed
+gosec.....................................................................Passed
+commitlint.................................................................Passed
+
+✓ All hooks passed
 ```
 
-Or if husky is installed, you can use git commit normally and get validation.
+### Skip Hooks (Not Recommended)
+
+To skip validation:
+
+```bash
+git commit --no-verify -m "your message"
+```
+
+⚠️ **Warning**: This bypasses all checks. Your commit may fail CI.
 
 ## GitHub Actions Validation
 
@@ -219,25 +268,27 @@ The commit message will be preserved, but verify it still follows conventions.
 Validate without committing:
 
 ```bash
-npm run commitlint
+pre-commit run --all-files
 ```
 
-Or validate a specific commit:
+Or run a specific hook:
 
 ```bash
-git log -1 --pretty=%B | npx commitlint
+pre-commit run commitlint --all-files
+pre-commit run golangci-lint --all-files
 ```
 
 ## Troubleshooting
 
-### Pre-commit hook fails
+### Pre-commit not found
 
-**Problem**: `husky: command not found`
+**Problem**: `pre-commit: command not found`
 
 **Solution**:
 ```bash
-npm install
-npm run prepare  # Install git hooks
+pip install pre-commit
+pre-commit install
+pre-commit install --hook-type commit-msg
 ```
 
 ### Invalid commit message

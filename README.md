@@ -40,7 +40,7 @@ go build -o substack .
 mv substack /usr/local/bin/
 ```
 
-See [SETUP.md](SETUP.md) for development setup with all hooks and automation.
+See [SETUP.md](SETUP.md) for development setup with commit hooks and automation.
 
 ## Getting Started
 
@@ -169,9 +169,10 @@ Quick start:
 ```sh
 git clone https://github.com/aaronsrivastava/substack-cli.git
 cd substack-cli
-npm install       # Install commit hooks
-go mod download   # Download Go dependencies
-go test ./...     # Run tests
+pip install pre-commit          # Install pre-commit framework
+pre-commit install              # Install git hooks
+go mod download                 # Download Go dependencies
+go test ./...                   # Run tests
 ```
 
 ### Contributing

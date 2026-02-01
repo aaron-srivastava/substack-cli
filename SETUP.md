@@ -5,7 +5,7 @@ This guide covers setting up the substack-cli repository for development with al
 ## Prerequisites
 
 - **Go** 1.25.6 or later
-- **Node.js** 16 or later (for commit hooks)
+- **Python** 3.7 or later (for pre-commit hooks)
 - **Git** 2.13 or later
 
 ## Quick Start
@@ -24,14 +24,20 @@ cd substack-cli
 go mod download
 go mod tidy
 
-# Install Node.js dependencies for commit hooks
-npm install
+# Install pre-commit framework
+pip install pre-commit
+
+# Install git hooks
+pre-commit install
+pre-commit install --hook-type commit-msg
 ```
 
-This automatically installs:
-- **husky**: Git hooks manager
+This installs:
+- **pre-commit**: Git hooks framework
 - **commitlint**: Commit message validator
-- Pre-commit hook for conventional commits validation
+- **golangci-lint**: Go code linter
+- **gosec**: Go security scanner
+- General checks (trailing whitespace, etc.)
 
 ### 3. Verify Installation
 
@@ -39,20 +45,20 @@ This automatically installs:
 # Check Go
 go version
 
-# Check Node.js
-node --version
-npm --version
+# Check Python/pre-commit
+python --version
+pre-commit --version
 
-# Verify husky hooks installed
-ls -la .husky/
+# Verify hooks installed
+ls -la .git/hooks/
 ```
 
 Should show:
 ```
-.husky/
-├── _
-├── .gitignore
-└── pre-commit
+.git/hooks/
+├── pre-commit
+├── commit-msg
+└── ...
 ```
 
 ## Development Workflow
@@ -242,7 +248,7 @@ git commit -m "feat: Add feature"  # ✓ Works
 git commit -m "added feature"      # ✗ Fails pre-commit hook
 
 # Check without committing
-npm run commitlint -- --from HEAD~1 --to HEAD
+pre-commit run --all-files
 ```
 
 ### Make a Release
@@ -262,14 +268,15 @@ git push origin v1.2.0
 
 ## Troubleshooting
 
-### "husky: command not found"
+### "pre-commit: command not found"
 
-**Cause**: Hooks not installed
+**Cause**: pre-commit not installed
 
 **Fix**:
 ```bash
-npm install
-npm run prepare
+pip install pre-commit
+pre-commit install
+pre-commit install --hook-type commit-msg
 ```
 
 ### Pre-commit hook fails with "type-empty"
@@ -317,17 +324,14 @@ git push origin :refs/tags/v1.2.0
 
 Install extensions:
 - **Go** (golang.go)
-- **Prettier** (esbenp.prettier-vscode)
 
 Create `.vscode/settings.json`:
 ```json
 {
   "editor.formatOnSave": true,
   "[go]": {
-    "editor.formatTool": "goimports"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "golang.go",
+    "editor.formatOnSave": true
   }
 }
 ```
