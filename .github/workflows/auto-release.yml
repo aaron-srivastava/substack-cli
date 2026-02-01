@@ -54,9 +54,9 @@ jobs:
           HAS_FEATURE=$(echo "$COMMITS" | grep -E "^feat(\(.+\))?:" || true)
           HAS_FIX=$(echo "$COMMITS" | grep -E "^fix(\(.+\))?:" || true)
 
-          echo "has-breaking=${HAS_BREAKING}" >> $GITHUB_OUTPUT
-          echo "has-feature=${HAS_FEATURE}" >> $GITHUB_OUTPUT
-          echo "has-fix=${HAS_FIX}" >> $GITHUB_OUTPUT
+          echo "has-breaking=$([ -n "$HAS_BREAKING" ] && echo true || echo false)" >> $GITHUB_OUTPUT
+          echo "has-feature=$([ -n "$HAS_FEATURE" ] && echo true || echo false)" >> $GITHUB_OUTPUT
+          echo "has-fix=$([ -n "$HAS_FIX" ] && echo true || echo false)" >> $GITHUB_OUTPUT
 
       - name: Calculate next version
         id: check-version
@@ -74,16 +74,16 @@ jobs:
 
           # Determine next version
           RELEASE_TYPE="none"
-          if [ -n "$HAS_BREAKING" ]; then
+          if [ "$HAS_BREAKING" = "true" ]; then
             MAJOR=$((MAJOR + 1))
             MINOR=0
             PATCH=0
             RELEASE_TYPE="major"
-          elif [ -n "$HAS_FEATURE" ]; then
+          elif [ "$HAS_FEATURE" = "true" ]; then
             MINOR=$((MINOR + 1))
             PATCH=0
             RELEASE_TYPE="minor"
-          elif [ -n "$HAS_FIX" ]; then
+          elif [ "$HAS_FIX" = "true" ]; then
             PATCH=$((PATCH + 1))
             RELEASE_TYPE="patch"
           fi
