@@ -16,9 +16,11 @@ permissions:
   id-token: write
 
 jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
   create-release:
-    needs: analyze-commits
-    if: needs.analyze-commits.outputs.should-release == 'true'
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
