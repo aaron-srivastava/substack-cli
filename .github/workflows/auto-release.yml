@@ -1,0 +1,174 @@
+name: Auto-Release
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "README.md"
+      - "CHANGELOG.md"
+      - "docs/**"
+      - ".gitignore"
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  analyze-commits:
+    runs-on: ubuntu-latest
+    outputs:
+      should-release: ${{ steps.check-version.outputs.should-release }}
+      next-version: ${{ steps.check-version.outputs.next-version }}
+      release-type: ${{ steps.check-version.outputs.release-type }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: latest-tag
+        run: |
+          # Get the latest tag, or use v0.0.0 if no tags exist
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "latest-tag=${LATEST_TAG}" >> $GITHUB_OUTPUT
+          echo "Latest tag: ${LATEST_TAG}"
+
+      - name: Analyze commits since last release
+        id: analyze
+        run: |
+          LATEST_TAG=${{ steps.latest-tag.outputs.latest-tag }}
+
+          # Get all commits since the latest tag
+          if [ "$LATEST_TAG" = "v0.0.0" ]; then
+            COMMITS=$(git log --pretty=format:"%s" --no-merges)
+          else
+            COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"%s" --no-merges)
+          fi
+
+          echo "Commits since ${LATEST_TAG}:"
+          echo "$COMMITS"
+
+          # Check for breaking changes, features, and fixes
+          HAS_BREAKING=$(echo "$COMMITS" | grep -E "^[a-z]+(\(.+\))?!:|BREAKING CHANGE" || true)
+          HAS_FEATURE=$(echo "$COMMITS" | grep -E "^feat(\(.+\))?:" || true)
+          HAS_FIX=$(echo "$COMMITS" | grep -E "^fix(\(.+\))?:" || true)
+
+          echo "has-breaking=${HAS_BREAKING}" >> $GITHUB_OUTPUT
+          echo "has-feature=${HAS_FEATURE}" >> $GITHUB_OUTPUT
+          echo "has-fix=${HAS_FIX}" >> $GITHUB_OUTPUT
+
+      - name: Calculate next version
+        id: check-version
+        run: |
+          LATEST_TAG=${{ steps.latest-tag.outputs.latest-tag }}
+          HAS_BREAKING=${{ steps.analyze.outputs.has-breaking }}
+          HAS_FEATURE=${{ steps.analyze.outputs.has-feature }}
+          HAS_FIX=${{ steps.analyze.outputs.has-fix }}
+
+          # Parse version
+          VERSION=${LATEST_TAG#v}
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+          MINOR=$(echo $VERSION | cut -d. -f2)
+          PATCH=$(echo $VERSION | cut -d. -f3)
+
+          # Determine next version
+          RELEASE_TYPE="none"
+          if [ -n "$HAS_BREAKING" ]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+            RELEASE_TYPE="major"
+          elif [ -n "$HAS_FEATURE" ]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+            RELEASE_TYPE="minor"
+          elif [ -n "$HAS_FIX" ]; then
+            PATCH=$((PATCH + 1))
+            RELEASE_TYPE="patch"
+          fi
+
+          NEXT_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+
+          echo "release-type=${RELEASE_TYPE}" >> $GITHUB_OUTPUT
+          echo "next-version=${NEXT_VERSION}" >> $GITHUB_OUTPUT
+          echo "should-release=$([ "$RELEASE_TYPE" != "none" ] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
+
+          echo "Release Type: ${RELEASE_TYPE}"
+          echo "Next Version: ${NEXT_VERSION}"
+          echo "Should Release: $([ "$RELEASE_TYPE" != "none" ] && echo "true" || echo "false")"
+
+  create-release:
+    needs: analyze-commits
+    if: needs.analyze-commits.outputs.should-release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Update CHANGELOG.md
+        env:
+          NEXT_VERSION: ${{ needs.analyze-commits.outputs.next-version }}
+          RELEASE_TYPE: ${{ needs.analyze-commits.outputs.release-type }}
+        run: |
+          DATE=$(date -u +"%Y-%m-%d")
+          NEXT_VERSION=${{ needs.analyze-commits.outputs.next-version }}
+
+          # Get commits since last tag for changelog
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          if [ -z "$LATEST_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+
+          # Create changelog entry
+          CHANGELOG_ENTRY="## [${NEXT_VERSION#v}] - ${DATE}
+
+### Added
+### Changed
+### Fixed
+### Removed
+
+"
+
+          # Insert new entry at the top (after header)
+          (echo "# Changelog"; echo ""; echo "All notable changes to this project will be documented in this file."; echo ""; echo "The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),"; echo "and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)."; echo ""; echo "## [Unreleased]"; echo ""; cat CHANGELOG.md | tail -n +8) > CHANGELOG.md.tmp
+          mv CHANGELOG.md.tmp CHANGELOG.md
+
+      - name: Commit changelog
+        env:
+          NEXT_VERSION: ${{ needs.analyze-commits.outputs.next-version }}
+        run: |
+          git add CHANGELOG.md
+          git commit -m "docs: Update changelog for ${{ needs.analyze-commits.outputs.next-version }}"
+
+      - name: Get octo-sts token
+        id: octo-sts
+        uses: octo-sts/action@main
+        with:
+          scope: aaronsrivastava/substack-cli
+          duration-seconds: 3600
+
+      - name: Create and push tag
+        env:
+          GITHUB_TOKEN: ${{ steps.octo-sts.outputs.token }}
+          NEXT_VERSION: ${{ needs.analyze-commits.outputs.next-version }}
+          RELEASE_TYPE: ${{ needs.analyze-commits.outputs.release-type }}
+        run: |
+          # Push changelog commit
+          git push origin main
+
+          # Create tag with proper message based on release type
+          RELEASE_MSG="Release ${{ needs.analyze-commits.outputs.next-version }}: ${{ needs.analyze-commits.outputs.release-type }} release"
+          git tag -a "${{ needs.analyze-commits.outputs.next-version }}" -m "$RELEASE_MSG"
+          git push origin "${{ needs.analyze-commits.outputs.next-version }}"
+
+          echo "✅ Created tag: ${{ needs.analyze-commits.outputs.next-version }}"
