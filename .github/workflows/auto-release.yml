@@ -130,14 +130,16 @@ jobs:
           fi
 
           # Create changelog entry
-          CHANGELOG_ENTRY="## [${NEXT_VERSION#v}] - ${DATE}
+          CHANGELOG_ENTRY=$(cat <<ENTRY_EOF
+          ## [${NEXT_VERSION#v}] - ${DATE}
 
-### Added
-### Changed
-### Fixed
-### Removed
+          ### Added
+          ### Changed
+          ### Fixed
+          ### Removed
 
-"
+          ENTRY_EOF
+          )
 
           # Insert new entry at the top (after header)
           (echo "# Changelog"; echo ""; echo "All notable changes to this project will be documented in this file."; echo ""; echo "The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),"; echo "and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)."; echo ""; echo "## [Unreleased]"; echo ""; cat CHANGELOG.md | tail -n +8) > CHANGELOG.md.tmp
