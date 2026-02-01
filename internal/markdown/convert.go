@@ -137,7 +137,7 @@ func convertBody(source []byte) (string, model.DraftBody) {
 
 	for child := doc.FirstChild(); child != nil; child = child.NextSibling() {
 		if h, ok := child.(*ast.Heading); ok && h.Level == 1 && title == "" {
-			title = string(child.Text(source))
+			title = string(nodeText(child, source))
 			continue
 		}
 		n := convertBlock(child, source)
@@ -225,7 +225,7 @@ func convertInlineChildren(node ast.Node, source []byte) []model.Node {
 func convertInline(node ast.Node, source []byte, marks []model.Mark) []model.Node {
 	switch n := node.(type) {
 	case *ast.Text:
-		t := string(n.Text(source))
+		t := string(n.Value(source))
 		result := []model.Node{{Type: "text", Text: t, Marks: marks}}
 		if n.SoftLineBreak() {
 			result[0].Text += "\n"
@@ -233,7 +233,7 @@ func convertInline(node ast.Node, source []byte, marks []model.Mark) []model.Nod
 		return result
 	case *ast.CodeSpan:
 		newMarks := appendMark(marks, model.Mark{Type: "code"})
-		t := string(n.Text(source))
+		t := string(nodeText(n, source))
 		return []model.Node{{Type: "text", Text: t, Marks: newMarks}}
 	case *ast.Emphasis:
 		typ := "em"
@@ -284,6 +284,18 @@ func appendMark(existing []model.Mark, m model.Mark) []model.Mark {
 	newMarks := make([]model.Mark, len(existing), len(existing)+1)
 	copy(newMarks, existing)
 	return append(newMarks, m)
+}
+
+func nodeText(n ast.Node, source []byte) []byte {
+	var buf []byte
+	for c := n.FirstChild(); c != nil; c = c.NextSibling() {
+		if t, ok := c.(*ast.Text); ok {
+			buf = append(buf, t.Value(source)...)
+		} else {
+			buf = append(buf, nodeText(c, source)...)
+		}
+	}
+	return buf
 }
 
 func codeBlockText(n *ast.FencedCodeBlock, source []byte) string {

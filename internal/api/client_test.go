@@ -26,7 +26,7 @@ func TestCookiesSet(t *testing.T) {
 	var gotCookies []*http.Cookie
 	client, srv := testClient(func(w http.ResponseWriter, r *http.Request) {
 		gotCookies = r.Cookies()
-		json.NewEncoder(w).Encode([]model.DraftResponse{})
+		_ = json.NewEncoder(w).Encode([]model.DraftResponse{})
 	})
 	defer srv.Close()
 
@@ -52,7 +52,7 @@ func TestCreateDraft(t *testing.T) {
 	client, srv := testClient(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case r.URL.Path == "/api/v1/publication/users":
-			json.NewEncoder(w).Encode([]struct {
+			_ = json.NewEncoder(w).Encode([]struct {
 				ID   int    `json:"id"`
 				Role string `json:"role"`
 			}{{ID: 99, Role: "admin"}})
@@ -61,7 +61,7 @@ func TestCreateDraft(t *testing.T) {
 			if r.Method != "POST" {
 				t.Errorf("method = %s, want POST", r.Method)
 			}
-			json.NewEncoder(w).Encode(model.DraftResponse{ID: 42, Title: "Test"})
+			_ = json.NewEncoder(w).Encode(model.DraftResponse{ID: 42, Title: "Test"})
 		default:
 			t.Errorf("unexpected path: %s", r.URL.Path)
 		}
@@ -85,7 +85,7 @@ func TestListPosts(t *testing.T) {
 		if r.URL.Path != "/api/v1/posts/" {
 			t.Errorf("path = %s", r.URL.Path)
 		}
-		json.NewEncoder(w).Encode([]model.Post{{ID: 1, Title: "A"}, {ID: 2, Title: "B"}})
+		_ = json.NewEncoder(w).Encode([]model.Post{{ID: 1, Title: "A"}, {ID: 2, Title: "B"}})
 	})
 	defer srv.Close()
 
@@ -101,7 +101,7 @@ func TestListPosts(t *testing.T) {
 func TestAPIError(t *testing.T) {
 	client, srv := testClient(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(403)
-		w.Write([]byte("forbidden"))
+		_, _ = w.Write([]byte("forbidden"))
 	})
 	defer srv.Close()
 
