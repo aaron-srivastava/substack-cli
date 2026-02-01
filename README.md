@@ -12,21 +12,35 @@ A command-line tool for managing Substack publications. Create posts from markdo
 
 ## Install
 
-Requires Go 1.21+.
+### Via Homebrew (macOS/Linux)
+
+```sh
+brew tap aaronsrivastava/substack-cli https://github.com/aaronsrivastava/substack-cli
+brew install substack-cli
+```
+
+### Via APT (Debian/Ubuntu)
+
+Download from [releases](https://github.com/aaronsrivastava/substack-cli/releases) page.
+
+### From Go
+
+Requires Go 1.25.6+.
 
 ```sh
 go install github.com/aaronsrivastava/substack-cli@latest
 ```
 
-Or build from source:
+### Build from Source
 
 ```sh
 git clone https://github.com/aaronsrivastava/substack-cli.git
 cd substack-cli
 go build -o substack .
-# Move to somewhere on your PATH
 mv substack /usr/local/bin/
 ```
+
+See [SETUP.md](SETUP.md) for development setup with all hooks and automation.
 
 ## Getting Started
 
@@ -143,3 +157,51 @@ substack config set <key> <val>  Set defaults (send_email, audience)
 | `1. item` | Ordered list |
 | ` ```lang ` | Code block with syntax |
 | `---` | Horizontal rule |
+
+## Development
+
+### Setup
+
+See [SETUP.md](SETUP.md) for complete development setup guide.
+
+Quick start:
+
+```sh
+git clone https://github.com/aaronsrivastava/substack-cli.git
+cd substack-cli
+npm install       # Install commit hooks
+go mod download   # Download Go dependencies
+go test ./...     # Run tests
+```
+
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feat/my-feature`
+3. Make changes with [conventional commits](COMMIT_CONVENTIONS.md)
+4. Push and create a pull request
+
+All commits must follow [Conventional Commits](https://www.conventionalcommits.org/). A pre-commit hook will validate your messages automatically.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+### Releases
+
+Releases are automated! When you merge to `main`:
+
+1. Commits are analyzed
+2. Version is automatically bumped (major/minor/patch)
+3. CHANGELOG.md is updated
+4. Release is created with binaries
+5. Announcement is posted on Bluesky
+
+See [AUTO_RELEASE.md](AUTO_RELEASE.md) for details.
+
+### Documentation
+
+- [SETUP.md](SETUP.md) - Development setup
+- [COMMIT_CONVENTIONS.md](COMMIT_CONVENTIONS.md) - Commit message format
+- [AUTO_RELEASE.md](AUTO_RELEASE.md) - Automatic releases
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Contributor guidelines
+- [RELEASING.md](RELEASING.md) - Manual release process
+- [DISTRIBUTION_SETUP.md](DISTRIBUTION_SETUP.md) - Distribution details
