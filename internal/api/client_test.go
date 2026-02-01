@@ -50,13 +50,13 @@ func TestCookiesSet(t *testing.T) {
 func TestCreateDraft(t *testing.T) {
 	callCount := 0
 	client, srv := testClient(func(w http.ResponseWriter, r *http.Request) {
-		switch {
-		case r.URL.Path == "/api/v1/publication/users":
+		switch r.URL.Path {
+		case "/api/v1/publication/users":
 			_ = json.NewEncoder(w).Encode([]struct {
 				ID   int    `json:"id"`
 				Role string `json:"role"`
 			}{{ID: 99, Role: "admin"}})
-		case r.URL.Path == "/api/v1/drafts/":
+		case "/api/v1/drafts/":
 			callCount++
 			if r.Method != "POST" {
 				t.Errorf("method = %s, want POST", r.Method)

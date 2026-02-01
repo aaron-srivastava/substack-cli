@@ -64,7 +64,7 @@ func (c *Client) do(method, url string, body any) (*http.Response, error) {
 		return nil, err
 	}
 	if resp.StatusCode >= 400 {
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 		respBody, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("API error %d: %s", resp.StatusCode, string(respBody))
 	}
@@ -73,7 +73,7 @@ func (c *Client) do(method, url string, body any) (*http.Response, error) {
 
 func decodeJSON[T any](resp *http.Response) (T, error) {
 	var result T
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return result, err
 	}
@@ -86,7 +86,7 @@ func (c *Client) userID() (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("fetching publication users: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	raw, _ := io.ReadAll(resp.Body)
 	var users []struct {
 		ID   int    `json:"id"`
@@ -149,7 +149,7 @@ func (c *Client) DeleteDraft(id int) error {
 	if err != nil {
 		return err
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	return nil
 }
 
@@ -186,7 +186,7 @@ func (c *Client) UnpublishPost(id int) error {
 	if err != nil {
 		return err
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	return nil
 }
 
