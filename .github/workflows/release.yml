@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: write
-  packages: write
+  id-token: write
 
 jobs:
   release:
@@ -22,19 +22,22 @@ jobs:
           go-version: '1.25.6'
           cache: true
 
+      # Use octo-sts to get a short-lived GitHub token
+      - name: Get GitHub token via octo-sts
+        id: octo-sts
+        uses: octo-sts/action@main
+        with:
+          scope: aaronsrivastava/substack-cli
+          duration-seconds: 3600
+
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: latest
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create Release Notes
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const tag = context.ref.replace('refs/tags/', '');
-            console.log(`Released: ${tag}`);
+          # Use the token from octo-sts
+          GITHUB_TOKEN: ${{ steps.octo-sts.outputs.token }}
+          # Bluesky announcer requires app password (should be set in repo secrets)
+          BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
