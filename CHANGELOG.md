@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Unreleased]
+
 ### Added
 - Frontmatter parsing for post metadata (title, subtitle, audience, tags, etc.)
 - CLI arguments override frontmatter values
