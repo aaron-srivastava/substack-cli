@@ -34,12 +34,15 @@ archives:
 brews:
   - repository:
       owner: aaronsrivastava
-      name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+      name: substack-cli
+      branch: main
+      pull_request:
+        enabled: true
+      token: "{{ .Env.GITHUB_TOKEN }}"
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
-    directory: Formula
+    directory: homebrew-tap/Formula
     caveats: |
       After installation, you need to authenticate with your Substack account:
         substack auth login
