@@ -157,7 +157,7 @@ jobs:
         uses: octo-sts/action@main
         with:
           scope: aaronsrivastava/substack-cli
-          duration-seconds: 3600
+          identity: release
 
       - name: Create and push tag
         env:

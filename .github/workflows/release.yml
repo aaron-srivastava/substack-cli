@@ -28,7 +28,7 @@ jobs:
         uses: octo-sts/action@main
         with:
           scope: aaronsrivastava/substack-cli
-          duration-seconds: 3600
+          identity: release
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
