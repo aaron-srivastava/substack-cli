@@ -107,50 +107,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Configure git
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-
-      - name: Update CHANGELOG.md
-        env:
-          NEXT_VERSION: ${{ needs.analyze-commits.outputs.next-version }}
-          RELEASE_TYPE: ${{ needs.analyze-commits.outputs.release-type }}
-        run: |
-          DATE=$(date -u +"%Y-%m-%d")
-          NEXT_VERSION=${{ needs.analyze-commits.outputs.next-version }}
-
-          # Get commits since last tag for changelog
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-
-          if [ -z "$LATEST_TAG" ]; then
-            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
-          else
-            COMMITS=$(git log ${LATEST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
-          fi
-
-          # Create changelog entry
-          CHANGELOG_ENTRY=$(cat <<ENTRY_EOF
-          ## [${NEXT_VERSION#v}] - ${DATE}
-
-          ### Added
-          ### Changed
-          ### Fixed
-          ### Removed
-
-          ENTRY_EOF
-          )
-
-          # Insert new entry at the top (after header)
-          (echo "# Changelog"; echo ""; echo "All notable changes to this project will be documented in this file."; echo ""; echo "The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),"; echo "and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)."; echo ""; echo "## [Unreleased]"; echo ""; cat CHANGELOG.md | tail -n +8) > CHANGELOG.md.tmp
-          mv CHANGELOG.md.tmp CHANGELOG.md
-
-      - name: Commit changelog
-        env:
-          NEXT_VERSION: ${{ needs.analyze-commits.outputs.next-version }}
-        run: |
-          git add CHANGELOG.md
-          git commit -m "docs: Update changelog for ${{ needs.analyze-commits.outputs.next-version }}"
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'  # or your version
 
       - name: Get octo-sts token
         id: octo-sts
@@ -159,18 +119,10 @@ jobs:
           scope: aaron-srivastava/substack-cli
           identity: release
 
-      - name: Create and push tag
+      - name: Run go-semantic-release
+        uses: go-semantic-release/action@v1
+        with:
+          allow-initial-development-versions: true
+          hooks: goreleaser
         env:
           GITHUB_TOKEN: ${{ steps.octo-sts.outputs.token }}
-          NEXT_VERSION: ${{ needs.analyze-commits.outputs.next-version }}
-          RELEASE_TYPE: ${{ needs.analyze-commits.outputs.release-type }}
-        run: |
-          # Push changelog commit
-          git push origin main
-
-          # Create tag with proper message based on release type
-          RELEASE_MSG="Release ${{ needs.analyze-commits.outputs.next-version }}: ${{ needs.analyze-commits.outputs.release-type }} release"
-          git tag -a "${{ needs.analyze-commits.outputs.next-version }}" -m "$RELEASE_MSG"
-          git push origin "${{ needs.analyze-commits.outputs.next-version }}"
-
-          echo "✅ Created tag: ${{ needs.analyze-commits.outputs.next-version }}"
