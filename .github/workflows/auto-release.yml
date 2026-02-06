@@ -45,4 +45,4 @@ jobs:
           allow-initial-development-versions: true
           hooks: goreleaser
         env:
-          github-token: ${{ steps.octo-sts.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.octo-sts.outputs.token }}
