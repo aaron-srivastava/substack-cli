@@ -1,8 +1,0 @@
-branches:
-  - main
-changelog:
-  file: CHANGELOG.md
-  skipOnEmpty: true
-plugins:
-  # If you publish artifacts with goreleaser; otherwise omit
-  - goreleaser
