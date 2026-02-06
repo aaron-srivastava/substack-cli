@@ -52,8 +52,8 @@ brews:
         enabled: true
       token: "{{ .Env.GITHUB_TOKEN }}"
     commit_author:
-      name: goreleaserbot
-      email: bot@goreleaser.com
+      name: substack-cli-bot
+      email: substack-cli-bot@users.noreply.github.com
     directory: homebrew-tap/Formula
     caveats: |
       After installation, you need to authenticate with your Substack account:
