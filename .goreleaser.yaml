@@ -123,15 +123,5 @@ changelog:
 announce:
   bluesky:
     enabled: true
-    # Username must be the handle without @
     username: "aaronsrivastava.com"
-    # Message template with Go template syntax
-    message_template: |
-      🚀 substack-cli {{.Tag}} is out!
-
-      {{- if .ReleaseNotes }}
-
-      {{.ReleaseNotes}}
-      {{- end }}
-
-      Download: {{.ReleaseURL}}
+    message_template: "🚀 substack-cli {{.Tag}} released! {{.ReleaseURL}}"
