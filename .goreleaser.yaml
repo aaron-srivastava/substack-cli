@@ -45,7 +45,7 @@ archives:
 
 brews:
   - repository:
-      owner: aaronsrivastava
+      owner: aaron-srivastava
       name: substack-cli
       branch: main
       pull_request:
@@ -60,7 +60,7 @@ brews:
         substack auth login
       For help, run:
         substack --help
-    homepage: https://github.com/aaronsrivastava/substack-cli
+    homepage: https://github.com/aaron-srivastava/substack-cli
     description: CLI tool for managing Substack publications
     license: MIT
     test: |
@@ -71,7 +71,7 @@ brews:
 nfpms:
   - package_name: substack-cli
     file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    homepage: https://github.com/aaronsrivastava/substack-cli
+    homepage: https://github.com/aaron-srivastava/substack-cli
     description: CLI tool for managing Substack publications
     maintainer: Aaron Srivastava <aaron@example.com>
     license: MIT
@@ -88,7 +88,7 @@ nfpms:
 
 release:
   github:
-    owner: aaronsrivastava
+    owner: aaron-srivastava
     name: substack-cli
   draft: false
   prerelease: false
