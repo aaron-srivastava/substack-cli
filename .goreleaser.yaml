@@ -48,12 +48,11 @@ brews:
       owner: aaron-srivastava
       name: substack-cli
       branch: main
-      pull_request:
-        enabled: true
       token: "{{ .Env.GITHUB_TOKEN }}"
     commit_author:
       name: substack-cli-bot
       email: substack-cli-bot@users.noreply.github.com
+    commit_msg_template: "chore(brew): update formula for {{ .ProjectName }} {{ .Tag }} [skip ci]"
     directory: homebrew-tap/Formula
     caveats: |
       After installation, you need to authenticate with your Substack account:
