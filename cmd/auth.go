@@ -67,12 +67,12 @@ func authLogin(_ *cobra.Command, _ []string) error {
 	substackLLI := prompt(scanner, "substack.lli cookie")
 
 	acct := model.Account{
-		Name:          name,
+		Name:           name,
 		PublicationURL: pubURL,
-		UserID:        userID,
-		SID:           sid,
-		SubstackSID:   substackSID,
-		SubstackLLI:   substackLLI,
+		UserID:         userID,
+		SID:            sid,
+		SubstackSID:    substackSID,
+		SubstackLLI:    substackLLI,
 	}
 
 	store, err := auth.Load()

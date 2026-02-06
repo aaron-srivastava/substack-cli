@@ -7,8 +7,8 @@ import (
 	"github.com/aaronsrivastava/substack-cli/internal/model"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
-	east "github.com/yuin/goldmark/extension/ast"
 	"github.com/yuin/goldmark/extension"
+	east "github.com/yuin/goldmark/extension/ast"
 	"github.com/yuin/goldmark/text"
 )
 
@@ -176,8 +176,8 @@ func convertBlock(node ast.Node, source []byte) *model.Node {
 		}
 		code := codeBlockText(n, source)
 		return &model.Node{
-			Type:  "code_block",
-			Attrs: attrs,
+			Type:    "code_block",
+			Attrs:   attrs,
 			Content: []model.Node{{Type: "text", Text: code}},
 		}
 	case *ast.List:

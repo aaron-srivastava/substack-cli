@@ -12,12 +12,12 @@ import (
 func testClient(handler http.HandlerFunc) (*Client, *httptest.Server) {
 	srv := httptest.NewServer(handler)
 	acct := &model.Account{
-		Name:          "test",
+		Name:           "test",
 		PublicationURL: srv.URL,
-		UserID:        "123",
-		SID:           "sid-val",
-		SubstackSID:   "ssid-val",
-		SubstackLLI:   "lli-val",
+		UserID:         "123",
+		SID:            "sid-val",
+		SubstackSID:    "ssid-val",
+		SubstackLLI:    "lli-val",
 	}
 	return NewClientWith(acct), srv
 }
@@ -108,5 +108,44 @@ func TestAPIError(t *testing.T) {
 	_, err := client.ListPosts()
 	if err == nil {
 		t.Fatal("expected error")
+	}
+}
+
+func TestCreateDraftWithAudience(t *testing.T) {
+	audiences := []string{"everyone", "only_paid", "only_free"}
+	for _, aud := range audiences {
+		t.Run(aud, func(t *testing.T) {
+			var receivedAudience string
+			client, srv := testClient(func(w http.ResponseWriter, r *http.Request) {
+				switch r.URL.Path {
+				case "/api/v1/publication/users":
+					_ = json.NewEncoder(w).Encode([]struct {
+						ID   int    `json:"id"`
+						Role string `json:"role"`
+					}{{ID: 99, Role: "admin"}})
+				case "/api/v1/drafts/":
+					var req model.DraftRequest
+					if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+						t.Fatalf("decode request: %v", err)
+					}
+					receivedAudience = req.Audience
+					_ = json.NewEncoder(w).Encode(model.DraftResponse{ID: 42, Title: "Test"})
+				default:
+					t.Errorf("unexpected path: %s", r.URL.Path)
+				}
+			})
+			defer srv.Close()
+
+			_, err := client.CreateDraft(model.DraftRequest{
+				Title:    "Test",
+				Audience: aud,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if receivedAudience != aud {
+				t.Errorf("audience = %q, want %q", receivedAudience, aud)
+			}
+		})
 	}
 }

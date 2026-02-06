@@ -25,7 +25,7 @@ func init() {
 		},
 		&cobra.Command{
 			Use:   "set <key> <value>",
-			Short: "Set a config value (send_email, audience)",
+			Short: "Set a config value (send_email, audience, section, output_format)",
 			Args:  cobra.ExactArgs(2),
 			RunE:  configSet,
 		},
@@ -50,7 +50,7 @@ func loadConfig() (*model.Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return &model.Config{Audience: "everyone"}, nil
+			return &model.Config{Audience: "everyone", OutputFormat: "text"}, nil
 		}
 		return nil, err
 	}
@@ -58,7 +58,36 @@ func loadConfig() (*model.Config, error) {
 	if err := json.Unmarshal(data, &cfg); err != nil {
 		return nil, err
 	}
+	// Apply defaults for missing values
+	if cfg.Audience == "" {
+		cfg.Audience = "everyone"
+	}
+	if cfg.OutputFormat == "" {
+		cfg.OutputFormat = "text"
+	}
 	return &cfg, nil
+}
+
+var validAudiences = []string{"everyone", "only_paid", "only_free"}
+
+func validAudience(s string) bool {
+	for _, v := range validAudiences {
+		if s == v {
+			return true
+		}
+	}
+	return false
+}
+
+var validOutputFormats = []string{"text", "json"}
+
+func validOutputFormat(s string) bool {
+	for _, v := range validOutputFormats {
+		if s == v {
+			return true
+		}
+	}
+	return false
 }
 
 func saveConfig(cfg *model.Config) error {
@@ -81,7 +110,8 @@ func configShow(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("send_email: %v\naudience:   %s\n", cfg.SendEmail, cfg.Audience)
+	fmt.Printf("send_email:    %v\naudience:      %s\nsection:       %s\noutput_format: %s\n",
+		cfg.SendEmail, cfg.Audience, cfg.Section, cfg.OutputFormat)
 	return nil
 }
 
@@ -94,9 +124,19 @@ func configSet(_ *cobra.Command, args []string) error {
 	case "send_email":
 		cfg.SendEmail = args[1] == "true"
 	case "audience":
+		if !validAudience(args[1]) {
+			return fmt.Errorf("invalid audience: %s (valid: %v)", args[1], validAudiences)
+		}
 		cfg.Audience = args[1]
+	case "section":
+		cfg.Section = args[1]
+	case "output_format":
+		if !validOutputFormat(args[1]) {
+			return fmt.Errorf("invalid output_format: %s (valid: %v)", args[1], validOutputFormats)
+		}
+		cfg.OutputFormat = args[1]
 	default:
-		return fmt.Errorf("unknown config key: %s (valid: send_email, audience)", args[0])
+		return fmt.Errorf("unknown config key: %s (valid: send_email, audience, section, output_format)", args[0])
 	}
 	if err := saveConfig(cfg); err != nil {
 		return err

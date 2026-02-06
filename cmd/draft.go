@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -22,14 +23,17 @@ func init() {
 		RunE:  draftPublish,
 	}
 	publishCmd.Flags().Bool("send-email", false, "Send email to subscribers")
-	publishCmd.Flags().String("audience", "everyone", "Audience: everyone or only_paid")
+	publishCmd.Flags().String("audience", "", "Audience: everyone, only_paid, only_free")
+
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List drafts",
+		RunE:  draftList,
+	}
+	listCmd.Flags().String("format", "", "Output format: text or json")
 
 	draftCmd.AddCommand(
-		&cobra.Command{
-			Use:   "list",
-			Short: "List drafts",
-			RunE:  draftList,
-		},
+		listCmd,
 		&cobra.Command{
 			Use:   "get <id>",
 			Short: "Get draft details",
@@ -48,7 +52,17 @@ func init() {
 	rootCmd.AddCommand(draftCmd)
 }
 
-func draftList(_ *cobra.Command, _ []string) error {
+func draftList(cmd *cobra.Command, _ []string) error {
+	cfg, err := loadConfig()
+	if err != nil {
+		return fmt.Errorf("loading config: %w", err)
+	}
+
+	format := cfg.OutputFormat
+	if cmd.Flags().Changed("format") {
+		format, _ = cmd.Flags().GetString("format")
+	}
+
 	client, err := api.NewClient()
 	if err != nil {
 		return err
@@ -57,6 +71,16 @@ func draftList(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
+	if format == "json" {
+		data, err := json.MarshalIndent(drafts, "", "  ")
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(data))
+		return nil
+	}
+
 	if len(drafts) == 0 {
 		fmt.Println("No drafts.")
 		return nil
@@ -102,12 +126,25 @@ func draftDelete(_ *cobra.Command, args []string) error {
 }
 
 func draftPublish(cmd *cobra.Command, args []string) error {
+	cfg, err := loadConfig()
+	if err != nil {
+		return fmt.Errorf("loading config: %w", err)
+	}
+
 	id, err := strconv.Atoi(args[0])
 	if err != nil {
 		return fmt.Errorf("invalid draft id: %s", args[0])
 	}
-	sendEmail, _ := cmd.Flags().GetBool("send-email")
-	audience, _ := cmd.Flags().GetString("audience")
+
+	sendEmail := cfg.SendEmail
+	if cmd.Flags().Changed("send-email") {
+		sendEmail, _ = cmd.Flags().GetBool("send-email")
+	}
+
+	audience := cfg.Audience
+	if cmd.Flags().Changed("audience") {
+		audience, _ = cmd.Flags().GetString("audience")
+	}
 
 	client, err := api.NewClient()
 	if err != nil {

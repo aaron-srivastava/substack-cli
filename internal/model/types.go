@@ -3,12 +3,12 @@ package model
 import "time"
 
 type Account struct {
-	Name          string `json:"name"`
+	Name           string `json:"name"`
 	PublicationURL string `json:"publication_url"`
-	UserID        string `json:"user_id"`
-	SID           string `json:"sid"`
-	SubstackSID   string `json:"substack_sid"`
-	SubstackLLI   string `json:"substack_lli"`
+	UserID         string `json:"user_id"`
+	SID            string `json:"sid"`
+	SubstackSID    string `json:"substack_sid"`
+	SubstackLLI    string `json:"substack_lli"`
 }
 
 type AccountStore struct {
@@ -22,16 +22,16 @@ type PublishOptions struct {
 }
 
 type DraftBody struct {
-	Type    string      `json:"type"`
-	Content []Node      `json:"content,omitempty"`
+	Type    string `json:"type"`
+	Content []Node `json:"content,omitempty"`
 }
 
 type Node struct {
-	Type    string            `json:"type"`
-	Attrs   map[string]any    `json:"attrs,omitempty"`
-	Content []Node            `json:"content,omitempty"`
-	Marks   []Mark            `json:"marks,omitempty"`
-	Text    string            `json:"text,omitempty"`
+	Type    string         `json:"type"`
+	Attrs   map[string]any `json:"attrs,omitempty"`
+	Content []Node         `json:"content,omitempty"`
+	Marks   []Mark         `json:"marks,omitempty"`
+	Text    string         `json:"text,omitempty"`
 }
 
 type Mark struct {
@@ -49,6 +49,7 @@ type DraftRequest struct {
 	DraftBody     string   `json:"draft_body"`
 	DraftBylines  []Byline `json:"draft_bylines"`
 	Audience      string   `json:"audience,omitempty"`
+	Section       string   `json:"draft_section_id,omitempty"`
 	SectionChosen bool     `json:"section_chosen"`
 	Type          string   `json:"type"`
 }
@@ -77,6 +78,8 @@ type DraftResponse struct {
 }
 
 type Config struct {
-	SendEmail bool   `json:"send_email"`
-	Audience  string `json:"audience"`
+	SendEmail    bool   `json:"send_email"`
+	Audience     string `json:"audience"`
+	Section      string `json:"section"`
+	OutputFormat string `json:"output_format"`
 }

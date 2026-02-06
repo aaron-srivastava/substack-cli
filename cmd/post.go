@@ -28,7 +28,8 @@ func init() {
 	createCmd.Flags().String("subtitle", "", "Post subtitle")
 	createCmd.Flags().Bool("publish", false, "Publish immediately")
 	createCmd.Flags().Bool("send-email", false, "Send email to subscribers")
-	createCmd.Flags().String("audience", "everyone", "Audience: everyone or only_paid")
+	createCmd.Flags().String("audience", "", "Audience: everyone, only_paid, only_free")
+	createCmd.Flags().String("section", "", "Section/category for the post")
 
 	updateCmd := &cobra.Command{
 		Use:   "update <id>",
@@ -41,13 +42,16 @@ func init() {
 	updateCmd.Flags().String("audience", "", "New audience")
 	updateCmd.Flags().String("send-email", "", "true/false")
 
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List published posts",
+		RunE:  postList,
+	}
+	listCmd.Flags().String("format", "", "Output format: text or json")
+
 	postCmd.AddCommand(
 		createCmd,
-		&cobra.Command{
-			Use:   "list",
-			Short: "List published posts",
-			RunE:  postList,
-		},
+		listCmd,
 		&cobra.Command{
 			Use:   "get <id>",
 			Short: "Get post details",
@@ -67,6 +71,11 @@ func init() {
 }
 
 func postCreate(cmd *cobra.Command, args []string) error {
+	cfg, err := loadConfig()
+	if err != nil {
+		return fmt.Errorf("loading config: %w", err)
+	}
+
 	source, err := os.ReadFile(args[0])
 	if err != nil {
 		return fmt.Errorf("reading file: %w", err)
@@ -79,16 +88,20 @@ func postCreate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("marshaling body: %w", err)
 	}
 
-	// Start from frontmatter values, then let CLI args override.
+	// Start from config defaults, then let frontmatter override, then CLI args override.
 	subtitle := ""
-	audience := "everyone"
+	audience := cfg.Audience
+	section := cfg.Section
 
 	if fm != nil {
 		if fm.Subtitle != "" {
 			subtitle = fm.Subtitle
 		}
 		if fm.Audience != "" {
-			audience = mapAudience(fm.Audience)
+			audience = fm.Audience
+		}
+		if fm.Section != "" {
+			section = fm.Section
 		}
 	}
 
@@ -102,13 +115,17 @@ func postCreate(cmd *cobra.Command, args []string) error {
 	if cmd.Flags().Changed("audience") {
 		audience, _ = cmd.Flags().GetString("audience")
 	}
+	if cmd.Flags().Changed("section") {
+		section, _ = cmd.Flags().GetString("section")
+	}
 
 	draft := model.DraftRequest{
 		Title:         title,
 		Subtitle:      subtitle,
 		DraftBody:     string(bodyJSON),
 		Audience:      audience,
-		SectionChosen: true,
+		Section:       section,
+		SectionChosen: section != "",
 	}
 
 	client, err := api.NewClient()
@@ -139,22 +156,17 @@ func postCreate(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// mapAudience converts frontmatter audience values (free/paid/founding) to
-// the Substack API values (everyone/only_paid/only_founding).
-func mapAudience(fm string) string {
-	switch fm {
-	case "free", "everyone":
-		return "everyone"
-	case "paid", "only_paid":
-		return "only_paid"
-	case "founding", "only_founding":
-		return "only_founding"
-	default:
-		return fm
+func postList(cmd *cobra.Command, _ []string) error {
+	cfg, err := loadConfig()
+	if err != nil {
+		return fmt.Errorf("loading config: %w", err)
 	}
-}
 
-func postList(_ *cobra.Command, _ []string) error {
+	format := cfg.OutputFormat
+	if cmd.Flags().Changed("format") {
+		format, _ = cmd.Flags().GetString("format")
+	}
+
 	client, err := api.NewClient()
 	if err != nil {
 		return err
@@ -163,6 +175,16 @@ func postList(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
+	if format == "json" {
+		data, err := json.MarshalIndent(posts, "", "  ")
+		if err != nil {
+			return err
+		}
+		fmt.Println(string(data))
+		return nil
+	}
+
 	if len(posts) == 0 {
 		fmt.Println("No published posts.")
 		return nil
