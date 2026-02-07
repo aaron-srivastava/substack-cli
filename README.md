@@ -15,26 +15,26 @@ A command-line tool for managing Substack publications. Create posts from markdo
 ### Via Homebrew (macOS/Linux)
 
 ```sh
-brew tap aaronsrivastava/substack-cli https://github.com/aaronsrivastava/substack-cli
+brew tap aaron-srivastava/substack-cli https://github.com/aaron-srivastava/substack-cli
 brew install substack-cli
 ```
 
 ### Via APT (Debian/Ubuntu)
 
-Download from [releases](https://github.com/aaronsrivastava/substack-cli/releases) page.
+Download from [releases](https://github.com/aaron-srivastava/substack-cli/releases) page.
 
 ### From Go
 
 Requires Go 1.25.6+.
 
 ```sh
-go install github.com/aaronsrivastava/substack-cli@latest
+go install github.com/aaron-srivastava/substack-cli@latest
 ```
 
 ### Build from Source
 
 ```sh
-git clone https://github.com/aaronsrivastava/substack-cli.git
+git clone https://github.com/aaron-srivastava/substack-cli.git
 cd substack-cli
 go build -o substack .
 mv substack /usr/local/bin/
@@ -167,7 +167,7 @@ See [SETUP.md](SETUP.md) for complete development setup guide.
 Quick start:
 
 ```sh
-git clone https://github.com/aaronsrivastava/substack-cli.git
+git clone https://github.com/aaron-srivastava/substack-cli.git
 cd substack-cli
 pip install pre-commit          # Install pre-commit framework
 pre-commit install              # Install git hooks

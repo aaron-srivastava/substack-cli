@@ -5,14 +5,14 @@ This directory contains the Homebrew formula for installing substack-cli.
 ## Installation
 
 ```bash
-brew tap aaronsrivastava/substack-cli https://github.com/aaronsrivastava/substack-cli
+brew tap aaron-srivastava/substack-cli https://github.com/aaron-srivastava/substack-cli
 brew install substack-cli
 ```
 
 Or in one command:
 
 ```bash
-brew install aaronsrivastava/substack-cli/substack-cli
+brew install aaron-srivastava/substack-cli/substack-cli
 ```
 
 ## Updating
@@ -25,5 +25,5 @@ brew upgrade substack-cli
 
 ```bash
 brew uninstall substack-cli
-brew untap aaronsrivastava/substack-cli
+brew untap aaron-srivastava/substack-cli
 ```

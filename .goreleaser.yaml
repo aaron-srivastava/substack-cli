@@ -53,7 +53,7 @@ brews:
       name: substack-cli-bot
       email: substack-cli-bot@users.noreply.github.com
     commit_msg_template: "chore(brew): update formula for {{ .ProjectName }} {{ .Tag }} [skip ci]"
-    directory: homebrew-tap/Formula
+    directory: Formula
     caveats: |
       After installation, you need to authenticate with your Substack account:
         substack auth login
