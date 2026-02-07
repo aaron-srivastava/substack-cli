@@ -92,6 +92,8 @@ release:
   draft: false
   prerelease: false
   name_template: "v{{.Version}}"
+  header: .github/release-header.md.tmpl
+  footer: .github/release-footer.md.tmpl
 
 changelog:
   sort: asc

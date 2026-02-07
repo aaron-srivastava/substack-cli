@@ -14,6 +14,7 @@ on:
 permissions:
   contents: write
   id-token: write
+  models: read
 
 jobs:
   test:
@@ -39,6 +40,46 @@ jobs:
           scope: aaron-srivastava/substack-cli
           identity: release
 
+      - name: Generate release summary
+        id: summary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Get commits since last tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"- %s" "${PREV_TAG}..HEAD" | head -15)
+          else
+            COMMITS=$(git log --pretty=format:"- %s" -10)
+          fi
+
+          # Determine release type
+          if echo "$COMMITS" | grep -q "^- feat"; then
+            RELEASE_TYPE="feature"
+          else
+            RELEASE_TYPE="maintenance"
+          fi
+
+          # Install gh-models extension
+          gh extension install github/gh-models || true
+
+          # Generate summary using GitHub Models
+          export RELEASE_TYPE COMMITS
+          SUMMARY=$(gh models run -f .github/prompts/release-summary.prompt.yml 2>/dev/null || echo "")
+
+          # Fallback if API fails
+          if [ -z "$SUMMARY" ]; then
+            if [ "$RELEASE_TYPE" = "feature" ]; then
+              SUMMARY="✨ New features are here! Check out what's new in this release."
+            else
+              SUMMARY="🛠️ Shipping improvements! Bug fixes and maintenance updates."
+            fi
+          fi
+
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          echo "$SUMMARY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Run go-semantic-release
         uses: go-semantic-release/action@v1
         with:
@@ -46,3 +87,5 @@ jobs:
           hooks: goreleaser
         env:
           GITHUB_TOKEN: ${{ steps.octo-sts.outputs.token }}
+          RELEASE_SUMMARY: ${{ steps.summary.outputs.summary }}
+          BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}

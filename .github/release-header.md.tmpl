@@ -1,0 +1,52 @@
+{{ if .Env.RELEASE_SUMMARY }}{{ .Env.RELEASE_SUMMARY }}{{ else }}✨ New release is here!{{ end }}
+
+## Installation
+
+<details>
+<summary><strong>🍎 macOS (Homebrew)</strong></summary>
+
+```bash
+brew tap aaron-srivastava/substack-cli
+brew install substack-cli
+```
+
+Or download the binary directly:
+- [Apple Silicon (arm64)](https://github.com/aaron-srivastava/substack-cli/releases/download/v{{ .Version }}/substack-cli_v{{ .Version }}_darwin_arm64.tar.gz)
+- [Intel (amd64)](https://github.com/aaron-srivastava/substack-cli/releases/download/v{{ .Version }}/substack-cli_v{{ .Version }}_darwin_amd64.tar.gz)
+
+</details>
+
+<details>
+<summary><strong>🐧 Linux</strong></summary>
+
+**Debian/Ubuntu:**
+```bash
+# Download the .deb file from the release assets below, then:
+sudo dpkg -i substack-cli_{{ .Version }}_linux_amd64.deb
+```
+
+**Fedora/RHEL:**
+```bash
+# Download the .rpm file from the release assets below, then:
+sudo rpm -i substack-cli_{{ .Version }}_linux_amd64.rpm
+```
+
+**Binary:**
+- [amd64](https://github.com/aaron-srivastava/substack-cli/releases/download/v{{ .Version }}/substack-cli_v{{ .Version }}_linux_amd64.tar.gz)
+- [arm64](https://github.com/aaron-srivastava/substack-cli/releases/download/v{{ .Version }}/substack-cli_v{{ .Version }}_linux_arm64.tar.gz)
+
+</details>
+
+<details>
+<summary><strong>🪟 Windows</strong></summary>
+
+Download and extract:
+- [amd64](https://github.com/aaron-srivastava/substack-cli/releases/download/v{{ .Version }}/substack-cli_v{{ .Version }}_windows_amd64.zip)
+- [arm64](https://github.com/aaron-srivastava/substack-cli/releases/download/v{{ .Version }}/substack-cli_v{{ .Version }}_windows_arm64.zip)
+
+Add the extracted directory to your PATH.
+
+</details>
+
+<details>
+<summary><strong>📋 Changelog</strong></summary>
