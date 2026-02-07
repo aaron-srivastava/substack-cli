@@ -44,7 +44,7 @@ func ParseFrontmatter(source []byte) (*Frontmatter, []byte) {
 	body := []byte(s[4+end+4:]) // skip past closing "---\n"
 
 	fm := &Frontmatter{}
-	for _, line := range strings.Split(yamlBlock, "\n") {
+	for line := range strings.SplitSeq(yamlBlock, "\n") {
 		key, val, ok := parseYAMLLine(line)
 		if !ok {
 			continue
@@ -82,12 +82,12 @@ func ParseFrontmatter(source []byte) (*Frontmatter, []byte) {
 }
 
 func parseYAMLLine(line string) (string, string, bool) {
-	idx := strings.Index(line, ":")
-	if idx < 0 {
+	key, val, found := strings.Cut(line, ":")
+	if !found {
 		return "", "", false
 	}
-	key := strings.TrimSpace(line[:idx])
-	val := strings.TrimSpace(line[idx+1:])
+	key = strings.TrimSpace(key)
+	val = strings.TrimSpace(val)
 	// Strip surrounding quotes
 	val = strings.Trim(val, "\"'")
 	return key, val, true
@@ -236,8 +236,9 @@ func convertInline(node ast.Node, source []byte, marks []model.Mark) []model.Nod
 		t := string(nodeText(n, source))
 		return []model.Node{{Type: "text", Text: t, Marks: newMarks}}
 	case *ast.Emphasis:
+		const strongLevel = 2
 		typ := "em"
-		if n.Level == 2 {
+		if n.Level == strongLevel {
 			typ = "strong"
 		}
 		newMarks := appendMark(marks, model.Mark{Type: typ})
@@ -301,7 +302,7 @@ func nodeText(n ast.Node, source []byte) []byte {
 func codeBlockText(n *ast.FencedCodeBlock, source []byte) string {
 	var buf []byte
 	lines := n.Lines()
-	for i := 0; i < lines.Len(); i++ {
+	for i := range lines.Len() {
 		seg := lines.At(i)
 		buf = append(buf, seg.Value(source)...)
 	}

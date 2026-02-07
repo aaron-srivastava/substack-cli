@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/aaronsrivastava/substack-cli/internal/api"
@@ -73,20 +74,20 @@ func draftList(cmd *cobra.Command, _ []string) error {
 	}
 
 	if format == "json" {
-		data, err := json.MarshalIndent(drafts, "", "  ")
-		if err != nil {
-			return err
+		data, marshalErr := json.MarshalIndent(drafts, "", "  ")
+		if marshalErr != nil {
+			return marshalErr
 		}
-		fmt.Println(string(data))
+		fmt.Fprintln(os.Stdout, string(data))
 		return nil
 	}
 
 	if len(drafts) == 0 {
-		fmt.Println("No drafts.")
+		fmt.Fprintln(os.Stdout, "No drafts.")
 		return nil
 	}
 	for _, d := range drafts {
-		fmt.Printf("%-8d %s\n", d.ID, d.Title)
+		fmt.Fprintf(os.Stdout, "%-8d %s\n", d.ID, d.Title)
 	}
 	return nil
 }
@@ -104,7 +105,7 @@ func draftGet(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("ID:       %d\nTitle:    %s\nSubtitle: %s\nSlug:     %s\nAudience: %s\n",
+	fmt.Fprintf(os.Stdout, "ID:       %d\nTitle:    %s\nSubtitle: %s\nSlug:     %s\nAudience: %s\n",
 		d.ID, d.Title, d.Subtitle, d.Slug, d.Audience)
 	return nil
 }
@@ -118,10 +119,10 @@ func draftDelete(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := client.DeleteDraft(id); err != nil {
-		return err
+	if deleteErr := client.DeleteDraft(id); deleteErr != nil {
+		return deleteErr
 	}
-	fmt.Printf("Draft %d deleted.\n", id)
+	fmt.Fprintf(os.Stdout, "Draft %d deleted.\n", id)
 	return nil
 }
 
@@ -157,6 +158,6 @@ func draftPublish(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Published: id=%d slug=%q\n", post.ID, post.Slug)
+	fmt.Fprintf(os.Stdout, "Published: id=%d slug=%q\n", post.ID, post.Slug)
 	return nil
 }

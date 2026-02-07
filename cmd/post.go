@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -137,7 +138,7 @@ func postCreate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("creating draft: %w", err)
 	}
-	fmt.Printf("Draft created: id=%d title=%q\n", resp.ID, resp.Title)
+	fmt.Fprintf(os.Stdout, "Draft created: id=%d title=%q\n", resp.ID, resp.Title)
 
 	publish, _ := cmd.Flags().GetBool("publish")
 	if cmd.Flags().Changed("publish") && publish {
@@ -146,11 +147,11 @@ func postCreate(cmd *cobra.Command, args []string) error {
 			SendEmail: sendEmail,
 			Audience:  audience,
 		}
-		post, err := client.PublishDraft(resp.ID, opts)
-		if err != nil {
-			return fmt.Errorf("publishing: %w", err)
+		post, publishErr := client.PublishDraft(resp.ID, opts)
+		if publishErr != nil {
+			return fmt.Errorf("publishing: %w", publishErr)
 		}
-		fmt.Printf("Published: id=%d slug=%q\n", post.ID, post.Slug)
+		fmt.Fprintf(os.Stdout, "Published: id=%d slug=%q\n", post.ID, post.Slug)
 	}
 
 	return nil
@@ -177,20 +178,20 @@ func postList(cmd *cobra.Command, _ []string) error {
 	}
 
 	if format == "json" {
-		data, err := json.MarshalIndent(posts, "", "  ")
-		if err != nil {
-			return err
+		data, marshalErr := json.MarshalIndent(posts, "", "  ")
+		if marshalErr != nil {
+			return marshalErr
 		}
-		fmt.Println(string(data))
+		fmt.Fprintln(os.Stdout, string(data))
 		return nil
 	}
 
 	if len(posts) == 0 {
-		fmt.Println("No published posts.")
+		fmt.Fprintln(os.Stdout, "No published posts.")
 		return nil
 	}
 	for _, p := range posts {
-		fmt.Printf("%-8d %s  %s\n", p.ID, p.PostDate, p.Title)
+		fmt.Fprintf(os.Stdout, "%-8d %s  %s\n", p.ID, p.PostDate, p.Title)
 	}
 	return nil
 }
@@ -208,7 +209,7 @@ func postGet(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("ID:       %d\nTitle:    %s\nSubtitle: %s\nSlug:     %s\nAudience: %s\nDate:     %s\n",
+	fmt.Fprintf(os.Stdout, "ID:       %d\nTitle:    %s\nSubtitle: %s\nSlug:     %s\nAudience: %s\nDate:     %s\n",
 		post.ID, post.Title, post.Subtitle, post.Slug, post.Audience, post.PostDate)
 	return nil
 }
@@ -222,10 +223,10 @@ func postUnpublish(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := client.UnpublishPost(id); err != nil {
-		return err
+	if unpublishErr := client.UnpublishPost(id); unpublishErr != nil {
+		return unpublishErr
 	}
-	fmt.Printf("Post %d unpublished.\n", id)
+	fmt.Fprintf(os.Stdout, "Post %d unpublished.\n", id)
 	return nil
 }
 
@@ -247,7 +248,7 @@ func postUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(updates) == 0 {
-		return fmt.Errorf("no updates specified")
+		return errors.New("no updates specified")
 	}
 
 	client, err := api.NewClient()
@@ -258,6 +259,6 @@ func postUpdate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Updated: id=%d title=%q\n", post.ID, post.Title)
+	fmt.Fprintf(os.Stdout, "Updated: id=%d title=%q\n", post.ID, post.Title)
 	return nil
 }

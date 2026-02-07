@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -34,31 +35,31 @@ func Load() (*model.AccountStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
+	data, readErr := os.ReadFile(path)
+	if readErr != nil {
+		if os.IsNotExist(readErr) {
 			return &model.AccountStore{}, nil
 		}
-		return nil, err
+		return nil, readErr
 	}
 	var store model.AccountStore
-	if err := json.Unmarshal(data, &store); err != nil {
-		return nil, err
+	if unmarshalErr := json.Unmarshal(data, &store); unmarshalErr != nil {
+		return nil, unmarshalErr
 	}
 	return &store, nil
 }
 
 func LoadFrom(path string) (*model.AccountStore, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
+	data, readErr := os.ReadFile(path)
+	if readErr != nil {
+		if os.IsNotExist(readErr) {
 			return &model.AccountStore{}, nil
 		}
-		return nil, err
+		return nil, readErr
 	}
 	var store model.AccountStore
-	if err := json.Unmarshal(data, &store); err != nil {
-		return nil, err
+	if unmarshalErr := json.Unmarshal(data, &store); unmarshalErr != nil {
+		return nil, unmarshalErr
 	}
 	return &store, nil
 }
@@ -117,7 +118,7 @@ func GetActive(store *model.AccountStore) (*model.Account, error) {
 			return &a, nil
 		}
 	}
-	return nil, fmt.Errorf("no active account; run 'substack auth login'")
+	return nil, errors.New("no active account; run 'substack auth login'")
 }
 
 func SwitchAccount(store *model.AccountStore, name string) error {

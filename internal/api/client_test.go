@@ -1,4 +1,4 @@
-package api
+package api_test
 
 import (
 	"encoding/json"
@@ -6,10 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/aaronsrivastava/substack-cli/internal/api"
 	"github.com/aaronsrivastava/substack-cli/internal/model"
 )
 
-func testClient(handler http.HandlerFunc) (*Client, *httptest.Server) {
+func testClient(handler http.HandlerFunc) (*api.Client, *httptest.Server) {
 	srv := httptest.NewServer(handler)
 	acct := &model.Account{
 		Name:           "test",
@@ -19,7 +20,7 @@ func testClient(handler http.HandlerFunc) (*Client, *httptest.Server) {
 		SubstackSID:    "ssid-val",
 		SubstackLLI:    "lli-val",
 	}
-	return NewClientWith(acct), srv
+	return api.NewClientWith(acct), srv
 }
 
 func TestCookiesSet(t *testing.T) {
@@ -58,7 +59,7 @@ func TestCreateDraft(t *testing.T) {
 			}{{ID: 99, Role: "admin"}})
 		case "/api/v1/drafts/":
 			callCount++
-			if r.Method != "POST" {
+			if r.Method != http.MethodPost {
 				t.Errorf("method = %s, want POST", r.Method)
 			}
 			_ = json.NewEncoder(w).Encode(model.DraftResponse{ID: 42, Title: "Test"})
@@ -99,8 +100,8 @@ func TestListPosts(t *testing.T) {
 }
 
 func TestAPIError(t *testing.T) {
-	client, srv := testClient(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(403)
+	client, srv := testClient(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
 		_, _ = w.Write([]byte("forbidden"))
 	})
 	defer srv.Close()

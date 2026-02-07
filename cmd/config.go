@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/aaronsrivastava/substack-cli/internal/auth"
 	"github.com/aaronsrivastava/substack-cli/internal/model"
@@ -47,16 +48,16 @@ func loadConfig() (*model.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := os.ReadFile(path)
-	if err != nil {
-		if os.IsNotExist(err) {
+	data, readErr := os.ReadFile(path)
+	if readErr != nil {
+		if os.IsNotExist(readErr) {
 			return &model.Config{Audience: "everyone", OutputFormat: "text"}, nil
 		}
-		return nil, err
+		return nil, readErr
 	}
 	var cfg model.Config
-	if err := json.Unmarshal(data, &cfg); err != nil {
-		return nil, err
+	if unmarshalErr := json.Unmarshal(data, &cfg); unmarshalErr != nil {
+		return nil, unmarshalErr
 	}
 	// Apply defaults for missing values
 	if cfg.Audience == "" {
@@ -71,23 +72,13 @@ func loadConfig() (*model.Config, error) {
 var validAudiences = []string{"everyone", "only_paid", "only_free"}
 
 func validAudience(s string) bool {
-	for _, v := range validAudiences {
-		if s == v {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(validAudiences, s)
 }
 
 var validOutputFormats = []string{"text", "json"}
 
 func validOutputFormat(s string) bool {
-	for _, v := range validOutputFormats {
-		if s == v {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(validOutputFormats, s)
 }
 
 func saveConfig(cfg *model.Config) error {
@@ -95,8 +86,8 @@ func saveConfig(cfg *model.Config) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-		return err
+	if mkdirErr := os.MkdirAll(filepath.Dir(path), 0700); mkdirErr != nil {
+		return mkdirErr
 	}
 	data, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
@@ -110,7 +101,7 @@ func configShow(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("send_email:    %v\naudience:      %s\nsection:       %s\noutput_format: %s\n",
+	fmt.Fprintf(os.Stdout, "send_email:    %v\naudience:      %s\nsection:       %s\noutput_format: %s\n",
 		cfg.SendEmail, cfg.Audience, cfg.Section, cfg.OutputFormat)
 	return nil
 }
@@ -138,9 +129,9 @@ func configSet(_ *cobra.Command, args []string) error {
 	default:
 		return fmt.Errorf("unknown config key: %s (valid: send_email, audience, section, output_format)", args[0])
 	}
-	if err := saveConfig(cfg); err != nil {
-		return err
+	if saveErr := saveConfig(cfg); saveErr != nil {
+		return saveErr
 	}
-	fmt.Printf("Set %s = %s\n", args[0], args[1])
+	fmt.Fprintf(os.Stdout, "Set %s = %s\n", args[0], args[1])
 	return nil
 }

@@ -51,7 +51,7 @@ func init() {
 }
 
 func prompt(scanner *bufio.Scanner, label string) string {
-	fmt.Printf("%s: ", label)
+	fmt.Fprintf(os.Stdout, "%s: ", label)
 	scanner.Scan()
 	return strings.TrimSpace(scanner.Text())
 }
@@ -81,10 +81,10 @@ func authLogin(_ *cobra.Command, _ []string) error {
 	}
 	auth.AddAccount(store, acct)
 	store.Active = name
-	if err := auth.Save(store); err != nil {
-		return err
+	if saveErr := auth.Save(store); saveErr != nil {
+		return saveErr
 	}
-	fmt.Printf("Logged in as %s (active)\n", name)
+	fmt.Fprintf(os.Stdout, "Logged in as %s (active)\n", name)
 	return nil
 }
 
@@ -97,7 +97,7 @@ func authStatus(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Active: %s (%s)\n", acct.Name, acct.PublicationURL)
+	fmt.Fprintf(os.Stdout, "Active: %s (%s)\n", acct.Name, acct.PublicationURL)
 	return nil
 }
 
@@ -107,7 +107,7 @@ func authList(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	if len(store.Accounts) == 0 {
-		fmt.Println("No accounts configured. Run 'substack auth login'.")
+		fmt.Fprintln(os.Stdout, "No accounts configured. Run 'substack auth login'.")
 		return nil
 	}
 	for _, a := range store.Accounts {
@@ -115,7 +115,7 @@ func authList(_ *cobra.Command, _ []string) error {
 		if a.Name == store.Active {
 			marker = "* "
 		}
-		fmt.Printf("%s%s (%s)\n", marker, a.Name, a.PublicationURL)
+		fmt.Fprintf(os.Stdout, "%s%s (%s)\n", marker, a.Name, a.PublicationURL)
 	}
 	return nil
 }
@@ -125,13 +125,13 @@ func authSwitch(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := auth.SwitchAccount(store, args[0]); err != nil {
-		return err
+	if switchErr := auth.SwitchAccount(store, args[0]); switchErr != nil {
+		return switchErr
 	}
-	if err := auth.Save(store); err != nil {
-		return err
+	if saveErr := auth.Save(store); saveErr != nil {
+		return saveErr
 	}
-	fmt.Printf("Switched to %s\n", args[0])
+	fmt.Fprintf(os.Stdout, "Switched to %s\n", args[0])
 	return nil
 }
 
@@ -140,12 +140,12 @@ func authRemove(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := auth.RemoveAccount(store, args[0]); err != nil {
-		return err
+	if removeErr := auth.RemoveAccount(store, args[0]); removeErr != nil {
+		return removeErr
 	}
-	if err := auth.Save(store); err != nil {
-		return err
+	if saveErr := auth.Save(store); saveErr != nil {
+		return saveErr
 	}
-	fmt.Printf("Removed %s\n", args[0])
+	fmt.Fprintf(os.Stdout, "Removed %s\n", args[0])
 	return nil
 }

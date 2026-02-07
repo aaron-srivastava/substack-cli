@@ -2,7 +2,9 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +12,10 @@ import (
 
 	"github.com/aaronsrivastava/substack-cli/internal/auth"
 	"github.com/aaronsrivastava/substack-cli/internal/model"
+)
+
+const (
+	httpBadRequestThreshold = 400
 )
 
 type Client struct {
@@ -48,7 +54,7 @@ func (c *Client) do(method, url string, body any) (*http.Response, error) {
 		}
 		reader = bytes.NewReader(data)
 	}
-	req, err := http.NewRequest(method, url, reader)
+	req, err := http.NewRequestWithContext(context.Background(), method, url, reader)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +69,7 @@ func (c *Client) do(method, url string, body any) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode >= 400 {
+	if resp.StatusCode >= httpBadRequestThreshold {
 		defer func() { _ = resp.Body.Close() }()
 		respBody, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("API error %d: %s", resp.StatusCode, string(respBody))
@@ -92,8 +98,8 @@ func (c *Client) userID() (int, error) {
 		ID   int    `json:"id"`
 		Role string `json:"role"`
 	}
-	if err := json.Unmarshal(raw, &users); err != nil {
-		return 0, fmt.Errorf("decoding publication users: %w", err)
+	if unmarshalErr := json.Unmarshal(raw, &users); unmarshalErr != nil {
+		return 0, fmt.Errorf("decoding publication users: %w", unmarshalErr)
 	}
 	for _, u := range users {
 		if u.Role == "admin" || u.Role == "owner" {
@@ -103,7 +109,7 @@ func (c *Client) userID() (int, error) {
 	if len(users) > 0 {
 		return users[0].ID, nil
 	}
-	return 0, fmt.Errorf("no users found for publication")
+	return 0, errors.New("no users found for publication")
 }
 
 func (c *Client) CreateDraft(draft model.DraftRequest) (*model.DraftResponse, error) {
@@ -118,34 +124,37 @@ func (c *Client) CreateDraft(draft model.DraftRequest) (*model.DraftResponse, er
 		draft.Type = "newsletter"
 	}
 	url := fmt.Sprintf("%s/api/v1/drafts/", c.baseURL())
-	resp, err := c.do("POST", url, draft)
+	resp, err := c.do(http.MethodPost, url, draft)
 	if err != nil {
 		return nil, err
 	}
+	defer func() { _ = resp.Body.Close() }()
 	return ptr(decodeJSON[model.DraftResponse](resp))
 }
 
 func (c *Client) GetDraft(id int) (*model.DraftResponse, error) {
 	url := fmt.Sprintf("%s/api/v1/drafts/%d", c.baseURL(), id)
-	resp, err := c.do("GET", url, nil)
+	resp, err := c.do(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
+	defer func() { _ = resp.Body.Close() }()
 	return ptr(decodeJSON[model.DraftResponse](resp))
 }
 
 func (c *Client) ListDrafts() ([]model.DraftResponse, error) {
 	url := fmt.Sprintf("%s/api/v1/drafts/", c.baseURL())
-	resp, err := c.do("GET", url, nil)
+	resp, err := c.do(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
+	defer func() { _ = resp.Body.Close() }()
 	return decodeJSON[[]model.DraftResponse](resp)
 }
 
 func (c *Client) DeleteDraft(id int) error {
 	url := fmt.Sprintf("%s/api/v1/drafts/%d", c.baseURL(), id)
-	resp, err := c.do("DELETE", url, nil)
+	resp, err := c.do(http.MethodDelete, url, nil)
 	if err != nil {
 		return err
 	}
@@ -155,34 +164,37 @@ func (c *Client) DeleteDraft(id int) error {
 
 func (c *Client) PublishDraft(id int, opts model.PublishOptions) (*model.Post, error) {
 	url := fmt.Sprintf("%s/api/v1/drafts/%d/publish", c.baseURL(), id)
-	resp, err := c.do("PUT", url, opts)
+	resp, err := c.do(http.MethodPut, url, opts)
 	if err != nil {
 		return nil, err
 	}
+	defer func() { _ = resp.Body.Close() }()
 	return ptr(decodeJSON[model.Post](resp))
 }
 
 func (c *Client) ListPosts() ([]model.Post, error) {
 	url := fmt.Sprintf("%s/api/v1/posts/", c.baseURL())
-	resp, err := c.do("GET", url, nil)
+	resp, err := c.do(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
+	defer func() { _ = resp.Body.Close() }()
 	return decodeJSON[[]model.Post](resp)
 }
 
 func (c *Client) GetPost(id int) (*model.Post, error) {
 	url := fmt.Sprintf("%s/api/v1/posts/%d", c.baseURL(), id)
-	resp, err := c.do("GET", url, nil)
+	resp, err := c.do(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
+	defer func() { _ = resp.Body.Close() }()
 	return ptr(decodeJSON[model.Post](resp))
 }
 
 func (c *Client) UnpublishPost(id int) error {
 	url := fmt.Sprintf("%s/api/v1/posts/%d/unpublish", c.baseURL(), id)
-	resp, err := c.do("PUT", url, nil)
+	resp, err := c.do(http.MethodPut, url, nil)
 	if err != nil {
 		return err
 	}
@@ -192,10 +204,11 @@ func (c *Client) UnpublishPost(id int) error {
 
 func (c *Client) UpdatePost(id int, updates map[string]any) (*model.Post, error) {
 	url := fmt.Sprintf("%s/api/v1/drafts/%d", c.baseURL(), id)
-	resp, err := c.do("PUT", url, updates)
+	resp, err := c.do(http.MethodPut, url, updates)
 	if err != nil {
 		return nil, err
 	}
+	defer func() { _ = resp.Body.Close() }()
 	return ptr(decodeJSON[model.Post](resp))
 }
 
