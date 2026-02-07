@@ -5,21 +5,21 @@
 class SubstackCli < Formula
   desc "CLI tool for managing Substack publications"
   homepage "https://github.com/aaron-srivastava/substack-cli"
-  version "0.4.0"
+  version "0.4.1"
   license "MIT"
 
   on_macos do
     on_intel do
-      url "https://github.com/aaron-srivastava/substack-cli/releases/download/v0.4.0/substack-cli_v0.4.0_darwin_amd64.tar.gz"
-      sha256 "4e9de42557e85380c63ccdc4c886b9f36c6d6aa16130d15acb8382dcb3bf9090"
+      url "https://github.com/aaron-srivastava/substack-cli/releases/download/v0.4.1/substack-cli_v0.4.1_darwin_amd64.tar.gz"
+      sha256 "b28ab638a96e10ba8000c327770ec6f1f6b671fd05a1032e2a672e1220a6efcc"
 
       def install
         bin.install "substack"
       end
     end
     on_arm do
-      url "https://github.com/aaron-srivastava/substack-cli/releases/download/v0.4.0/substack-cli_v0.4.0_darwin_arm64.tar.gz"
-      sha256 "0629db41b9a8f26c1e909b3ae91cc5ac0b7cc6cca459ef0ac36e5bb88d6c64dd"
+      url "https://github.com/aaron-srivastava/substack-cli/releases/download/v0.4.1/substack-cli_v0.4.1_darwin_arm64.tar.gz"
+      sha256 "9ad25e6075532f8572392222ffb612d28264fa306b0a3e99e21b9a05c58028cf"
 
       def install
         bin.install "substack"
@@ -30,8 +30,8 @@ class SubstackCli < Formula
   on_linux do
     on_intel do
       if Hardware::CPU.is_64_bit?
-        url "https://github.com/aaron-srivastava/substack-cli/releases/download/v0.4.0/substack-cli_v0.4.0_linux_amd64.tar.gz"
-        sha256 "7338389c19640d04a9f673c287e36937bf99fe76fb0af2e5c301a1d45bbe4b69"
+        url "https://github.com/aaron-srivastava/substack-cli/releases/download/v0.4.1/substack-cli_v0.4.1_linux_amd64.tar.gz"
+        sha256 "81ed03715c6d13329a30d8d36aa35886134b430ffa0e2f15c0ec3aa72dd98100"
 
         def install
           bin.install "substack"
@@ -40,8 +40,8 @@ class SubstackCli < Formula
     end
     on_arm do
       if Hardware::CPU.is_64_bit?
-        url "https://github.com/aaron-srivastava/substack-cli/releases/download/v0.4.0/substack-cli_v0.4.0_linux_arm64.tar.gz"
-        sha256 "88ace70115810faed208fd3ce0f3d9a5de77bb210d43bb1e27802d1c254a95eb"
+        url "https://github.com/aaron-srivastava/substack-cli/releases/download/v0.4.1/substack-cli_v0.4.1_linux_arm64.tar.gz"
+        sha256 "a8c2a9476e90f28382f8926fc6e6967584d372bd4b3cbd6c8c0e1dc2534f905a"
 
         def install
           bin.install "substack"
